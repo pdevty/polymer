@@ -1,0 +1,13 @@
+name = "Polymer"
+license = "MIT"
+licenselink = "https://github.com/pdevty/polymer/blob/master/LICENSE.md"
+description = "Material Design theme by polymer (web components)"
+homepage = "https://github.com/pdevty/polymer"
+tags = ["blog"]
+features = ["Polymer Material Design","Google Analytics","Pagination",
+"Disqus","Tags","Categories","Highlighting source code","Cover image","Social links"]
+min_version = 0.13
+
+[author]
+  name = "pdevty"
+  homepage = "http://pdevty.github.io/blog/"

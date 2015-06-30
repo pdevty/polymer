@@ -1,0 +1,45 @@
+{{ partial "header.html" . }}
+
+{{ $baseurl := .Site.BaseURL }}
+<div class="content">
+
+  <div class="article">
+    <div class="title">{{ .Title }}</div>
+    {{if .Params.categories }}
+      <div class="categories">
+        {{ range $index, $category := .Params.categories }}
+          <a href="{{$baseurl}}/categories/{{ $category | urlize }}/">{{ $category }}</a>
+        {{ end }}
+      </div>
+    {{end}} 
+    <div class="description">{{ .Content }}</div>
+    <div class="tags">
+      {{ .Date.Format "2 Jan 2006" }}
+      {{if .Params.tags }}
+        {{ range $index, $tag := .Params.tags }}
+          <a href="{{$baseurl}}/tags/{{ $tag | urlize }}/">#{{ $tag }}</a>
+        {{ end }}
+      {{end}} 
+    </div>
+    {{ with .Site.DisqusShortname }}
+      {{ partial "disqus.html" . }}
+    {{ end }}
+  </div>
+
+</div>
+
+<paper-item>
+  {{if .Prev}}
+    <a href="{{.Prev.Permalink}}"><paper-fab icon="chevron-left"><a></a></paper-fab></a>
+  {{else}}
+    <paper-fab disabled icon="chevron-left"></paper-fab>
+  {{end}}
+    <div class="flex"></div>
+  {{if .Next}}
+    <a href="{{.Next.Permalink}}"><paper-fab icon="chevron-right"></paper-fab></a>
+  {{else}}
+    <paper-fab disabled icon="chevron-right"></paper-fab>
+  {{end}}
+</paper-item>
+
+{{ partial "footer.html" . }}

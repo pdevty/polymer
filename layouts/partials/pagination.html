@@ -1,0 +1,13 @@
+<paper-item>
+  {{if .HasPrev}}
+    <a href="{{.Prev.URL}}"><paper-fab icon="chevron-left"><a></a></paper-fab></a>
+  {{else}}
+    <paper-fab disabled icon="chevron-left"></paper-fab>
+  {{end}}
+    <div class="flex"></div>
+  {{if .HasNext}}
+    <a href="{{.Next.URL}}"><paper-fab icon="chevron-right"></paper-fab></a>
+  {{else}}
+    <paper-fab disabled icon="chevron-right"></paper-fab>
+  {{end}}
+</paper-item>

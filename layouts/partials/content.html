@@ -1,0 +1,26 @@
+{{ $baseurl := .Site.BaseURL }}
+<div class="content">
+
+{{range $index, $page := .Paginator.Pages}}
+  <div class="article">
+    <div class="title"><a href="{{ .Permalink }}">{{ .Title }}</a></div>
+    {{if .Params.categories }}
+      <div class="categories">
+        {{ range $index, $category := .Params.categories }}
+          <a href="{{$baseurl}}/categories/{{ $category | urlize }}/">{{ $category }}</a>
+        {{ end }}
+      </div>
+    {{end}} 
+    <div class="description">{{ .Summary }}</div>
+    <div class="tags">
+      {{ .Date.Format "2 Jan 2006" }}
+      {{if .Params.tags }}
+        {{ range $index, $tag := .Params.tags }}
+          <a href="{{$baseurl}}/tags/{{ $tag | urlize }}/">#{{ $tag }}</a>
+        {{ end }}
+      {{end}} 
+    </div>
+  </div>
+{{ end }}
+
+</div>
