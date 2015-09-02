@@ -145,21 +145,21 @@
         <paper-icon-button icon="menu" paper-drawer-toggle></paper-icon-button>
         <div class="bottom title">{{.Site.Title}}</div>
         <div class="flex"></div>
-        {{with .Site.Params.facebook}}
-          <a href="https://www.facebook.com/{{ . }}"><paper-icon-button src="{{$baseurl}}/images/facebook-dreamstale25.png"></paper-icon-button></a>
-        {{end}}
-        {{with .Site.Params.twitter}}
-          <a href="https://twitter.com/{{ . }}"><paper-icon-button src="{{$baseurl}}/images/twitter-dreamstale71.png"></paper-icon-button></a>
-        {{end}}
-        {{with .Site.Params.gplus}}
-          <a href="https://google.com/+{{ . }}"><paper-icon-button src="{{$baseurl}}/images/google+-dreamstale37.png"></paper-icon-button></a>
-        {{end}}
-        {{with .Site.Params.linkedin}}
-          <a href="https://www.linkedin.com/in/{{ . }}"><paper-icon-button src="{{$baseurl}}/images/linkedin-dreamstale45.png"></paper-icon-button></a>
-        {{end}}
-        {{with .Site.Params.github}}
-          <a href="https://github.com/{{ . }}"><paper-icon-button src="{{$baseurl}}/images/github2-dreamstale35.png"></paper-icon-button></a>
-        {{end}}
-          <a href="{{$baseurl}}/index.xml"><paper-icon-button src="{{$baseurl}}/images/feed-dreamstale27.png"></paper-icon-button></a>
+		{{ range $item := .Site.Params.logos }}
+			{{ if eq $item.site "weibo" }}
+				<a href="http://www.weibo.com/{{ $item.username }}"><paper-icon-button src="{{$baseurl}}/images/weibo.png"></paper-icon-button></a>
+			{{ else if eq $item.site "github"}}
+				<a href="https://github.com/{{ $item.username }}"><paper-icon-button src="{{$baseurl}}/images/github.png"></paper-icon-button></a>
+			{{ else if eq $item.site "twitter"}}
+				<a href="https://twitter.com/{{ $item.username }}"><paper-icon-button src="{{$baseurl}}/images/twitter.png"></paper-icon-button></a>
+			{{ else if eq $item.site "facebook"}}
+				<a href="https://www.facebook.com/{{ $item.username }}"><paper-icon-button src="{{$baseurl}}/images/facebook.png"></paper-icon-button></a>
+			{{ else if eq $item.site "gplus"}}
+				<a href="https://google.com/+{{ $item.username }}"><paper-icon-button src="{{$baseurl}}/images/gplus.png"></paper-icon-button></a>
+			{{ else if eq $item.site "linkedin"}}
+				<a href="https://www.linkedin.com/in/{{ $item.username }}"><paper-icon-button src="{{$baseurl}}/images/linkedin.png"></paper-icon-button></a>
+			{{end}}
+		{{end}}
+		<a href="{{$baseurl}}/index.xml"><paper-icon-button src="{{$baseurl}}/images/feed.png"></paper-icon-button></a>
       
       </paper-toolbar>

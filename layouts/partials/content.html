@@ -1,4 +1,5 @@
 {{ $baseurl := .Site.BaseURL }}
+<paper-item>
 <div class="content">
 
 {{range $index, $page := .Paginator.Pages}}
@@ -24,3 +25,4 @@
 {{ end }}
 
 </div>
+</paper-item>
