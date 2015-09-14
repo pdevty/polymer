@@ -1,36 +1,30 @@
 {{ partial "header.html" . }}
 
 {{ $baseurl := .Site.BaseURL }}
+<paper-item>
 <div class="content">
 
   <div class="article">
-    <div class="title">{{ .Title }}</div>
+    <div class="title"><div class="main single">{{ .Title }}
     {{if .Params.categories }}
-      <div class="categories">
-        {{ range $index, $category := .Params.categories }}
-          <a href="{{$baseurl}}/categories/{{ $category | urlize }}/">{{ $category }}</a>
-        {{ end }}
-      </div>
+      {{partial "category.html" .}}
     {{end}} 
-    <div class="description">{{ .Content }}</div>
-    <div class="tags">
-      {{ .Date.Format "2 Jan 2006" }}
-      {{if .Params.tags }}
-        {{ range $index, $tag := .Params.tags }}
-          <a href="{{$baseurl}}/tags/{{ $tag | urlize }}/">#{{ $tag }}</a>
-        {{ end }}
-      {{end}} 
-    </div>
-    {{ with .Site.DisqusShortname }}
-      {{ partial "disqus.html" . }}
-    {{ end }}
+	</div></div>
+	<hr style="clear:both;">
+    <div class="markdown-body">{{ .Content }}</div>
+	
+	<hr style="clear:both;">
+	{{partial "tag.html" .}}
+	{{ if .Site.DisqusShortname }}
+		<div id="disqus_thread"></div>
+	{{end}}
   </div>
 
 </div>
-
+</paper-item>
 <paper-item>
   {{if .Prev}}
-    <a href="{{.Prev.Permalink}}"><paper-fab icon="chevron-left"><a></a></paper-fab></a>
+    <a href="{{.Prev.Permalink}}"><paper-fab icon="chevron-left"></paper-fab></a>
   {{else}}
     <paper-fab disabled icon="chevron-left"></paper-fab>
   {{end}}
@@ -43,3 +37,7 @@
 </paper-item>
 
 {{ partial "footer.html" . }}
+
+{{ if .Site.DisqusShortname }}
+  {{ partial "disqus.html" . }}
+{{ end }}

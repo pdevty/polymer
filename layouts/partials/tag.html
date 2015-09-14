@@ -1,0 +1,10 @@
+{{ $baseurl := .Site.BaseURL }}
+
+		<div class="tags">
+      <span>{{ .Date.Format .Site.Params.dateFormat }}</span>
+      {{if .Params.tags }}
+        {{ range $index, $tag := .Params.tags }}
+          <a href="{{$baseurl}}/tags/{{ $tag | urlize }}/"><paper-button class="blue ripple"><iron-icon icon="loyalty"></iron-icon>{{ $tag }}</paper-button></a>
+        {{ end }}
+      {{end}} 
+    </div>

@@ -1,0 +1,9 @@
+{{ $baseurl := .Site.BaseURL }}
+{{if .Params.categories }}
+<div class="categories">
+	<span>{{.Site.Params.transCategory}}: </span>
+	{{ range $index, $category := .Params.categories }}
+	  <a href="{{$baseurl}}/categories/{{ $category | urlize }}/"><paper-button class="green ripple"><iron-icon icon="loyalty"></iron-icon>{{ $category }}</paper-button></a>
+	{{ end }}
+</div>
+{{end}} 

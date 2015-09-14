@@ -2,11 +2,47 @@
 {{ partial "header.html" . }}
 
 {{ $data := .Data }}
+<link rel="import" href="{{$baseurl}}/bower_components/paper-header-panel/paper-header-panel.html">
+<style is="custom-style">
 
+      paper-header-panel {
+        width: 100%;
+        @apply(--shadow-elevation-2dp);
+      }
+      .paper-header {
+        height: 60px;
+        font-size: 16px;
+        line-height: 60px;
+        padding: 0 10px;
+        color: white;
+        transition: height 0.2s;
+      }
+	  .green .paper-header {
+        background-color: var(--paper-green-500);
+      }
+.paper-header.tall {
+	font-size: 30px
+}
+.cover {
+	margin: 60px;
+}
+</style>
+<paper-header-panel mode="cover" class="green">
+<div class="paper-header tall">
+{{ if eq $data.Plural "tags"}}
+{{.Site.Params.transTag}}
+{{else}}
+{{.Site.Params.transCategory}}
+{{end}}
+</div>
+<div class="content cover" style="min-height:300px">
+{{if .Data.Terms}}
 <paper-menu>
   {{ range $key, $value := .Data.Terms }}
     <a href="{{$baseurl}}/{{ $data.Plural }}/{{ $key | urlize }}"><paper-item>{{ if eq $data.Plural "tags"}}<iron-icon icon="loyalty"></iron-icon>{{else}}<iron-icon icon="drafts"></iron-icon>{{end}}　<div class="flex">{{ $key }}</div> {{ len $value }}</paper-item></a>
   {{ end }}
 </paper-menu>
-
+{{end}}
+</div>
+</paper-header-panel>
 {{ partial "footer.html" . }}

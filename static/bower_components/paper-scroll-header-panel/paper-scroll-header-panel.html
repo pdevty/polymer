@@ -87,13 +87,14 @@ To change the background for toolbar when it is condensed:
       right: 0;
       bottom: 0;
       left: 0;
+
       -moz-box-sizing: border-box;
       box-sizing: border-box;
+
       -webkit-overflow-scrolling: touch;
+
       overflow-x: hidden;
       overflow-y: auto;
-      -webkit-transform: translateZ(0);
-      transform: translateZ(0);
     }
 
     #headerContainer {
@@ -182,8 +183,7 @@ To change the background for toolbar when it is condensed:
        */
       condenses: {
         type: Boolean,
-        value: false,
-        observer: '_condensesChanged'
+        value: false
       },
 
       /**
@@ -251,24 +251,40 @@ To change the background for toolbar when it is condensed:
         value: false
       },
 
-      _headerMargin: {
-        type: Number
+      /**
+       * The state of the header. The initial value is `HEADER_STATE_EXPANDED`.
+       * Depending on the configuration and the `scrollTop` value,
+       * the header state could change to
+       * `HEADER_STATE_HIDDEN`, `HEADER_STATE_CONDENSED` and `HEADER_STATE_INTERPOLATED`
+       */
+      headerState: {
+        type: Number,
+        readOnly: true,
+        value: 0
       },
 
       _prevScrollTop: {
-        type: Number
+        type: Number,
+        value: 0
       },
 
       _y: {
-        type: Number
-      }
+        type: Number,
+        value: 0
+      },
 
+      /** @type {number|null} */
+      _defaultCondsensedHeaderHeight: {
+        type: Number,
+        value: 0
+      }
     },
 
     observers: [
-      '_setup(_headerMargin, headerHeight, fixed)',
+      '_setup(headerHeight, condensedHeaderHeight, fixed)',
+      '_condensedHeaderHeightChanged(condensedHeaderHeight)',
       '_headerHeightChanged(headerHeight, condensedHeaderHeight)',
-      '_condensedHeaderHeightChanged(headerHeight, condensedHeaderHeight)'
+      '_condensesChanged(condenses)',
     ],
 
     listeners: {
@@ -281,9 +297,38 @@ To change the background for toolbar when it is condensed:
       this.scroller.addEventListener('scroll', this._scrollHandler);
     },
 
-    detached: function() {
-      this.scroller.removeEventListener('scroll', this._scrollHandler);
-    },
+    /**
+     * The header's initial state
+     *
+     * @property HEADER_STATE_EXPANDED
+     * @type number
+     */
+    HEADER_STATE_EXPANDED: 0,
+
+    /**
+     * The header's state when it's hidden.
+     *
+     * @property HEADER_STATE_HIDDEN
+     * @type number
+     */
+    HEADER_STATE_HIDDEN: 1,
+
+    /**
+     * The header's state when it's condensed.
+     *
+     * @property HEADER_STATE_CONDENSED
+     * @type number
+     */
+    HEADER_STATE_CONDENSED: 2,
+
+    /**
+     * The header's state when its progress is somewhere between
+     * the `hidden` and `condensed` state.
+     *
+     * @property HEADER_STATE_INTERPOLATED
+     * @type number
+     */
+    HEADER_STATE_INTERPOLATED: 3,
 
     /**
      * Returns the header element.
@@ -315,6 +360,18 @@ To change the background for toolbar when it is condensed:
       return this.$.mainContainer;
     },
 
+    get _headerMaxDelta() {
+      return this.keepCondensedHeader ? this._headerMargin : this.headerHeight;
+    },
+
+    get _headerMargin() {
+      return this.headerHeight - this.condensedHeaderHeight;
+    },
+
+    _y: 0,
+
+    _prevScrollTop: 0,
+
     /**
      * Invoke this to tell `paper-scroll-header-panel` to re-measure the header's
      * height.
@@ -328,127 +385,211 @@ To change the background for toolbar when it is condensed:
       }
     },
 
-    _headerHeightChanged: function() {
-      if (!this.condensedHeaderHeight) {
-        // assume condensedHeaderHeight is 1/3 of the headerHeight
-        this.condensedHeaderHeight = this.headerHeight * 1 / 3;
+    /**
+     * Scroll to a specific y coordinate.
+     *
+     * @method scroll
+     * @param {number} top The coordinate to scroll to, along the y-axis.
+     * @param {boolean} smooth true if the scroll position should be smoothly adjusted.
+     */
+    scroll: function(top, smooth) {
+      // the scroll event will trigger _updateScrollState directly, 
+      // However, _updateScrollState relies on the previous `scrollTop` to update the states.
+      // Calling _updateScrollState will ensure that the states are synced correctly.
+
+      if (smooth) {
+        // TODO(blasten): use CSS scroll-behavior once it ships in Chrome.
+        var easingFn = function easeOutQuad(t, b, c, d) {
+          t /= d;
+          return -c * t*(t-2) + b;
+        };
+        var animationId = Math.random();
+        var duration = 200;
+        var startTime = Date.now();
+        var currentScrollTop = this.scroller.scrollTop;
+        var deltaScrollTop = top - currentScrollTop;
+
+        this._currentAnimationId = animationId;
+
+        (function updateFrame() {
+          var now = Date.now();
+          var elapsedTime = now - startTime;
+
+          if (elapsedTime > duration) {
+            this.scroller.scrollTop = top;
+            this._updateScrollState(top);
+
+          } else if (this._currentAnimationId === animationId) {
+            this.scroller.scrollTop = easingFn(elapsedTime, currentScrollTop, deltaScrollTop, duration);
+            requestAnimationFrame(updateFrame.bind(this));
+          }
+
+        }).call(this);
+
+      } else {
+        this.scroller.scrollTop = top;
+        this._updateScrollState(top);
       }
     },
 
-    _condensedHeaderHeightChanged: function() {
-      if (this.headerHeight) {
-        this._headerMargin = this.headerHeight - this.condensedHeaderHeight;
+   /**
+     * Condense the header.
+     *
+     * @method condense
+     * @param {boolean} smooth true if the scroll position should be smoothly adjusted.
+     */
+    condense: function(smooth) {
+      if (this.condenses && !this.fixed && !this.noReveal) {
+        switch (this.headerState) {
+          case this.HEADER_STATE_HIDDEN:
+            this.scroll(this.scroller.scrollTop - (this._headerMaxDelta - this._headerMargin), smooth);
+          break;
+          case this.HEADER_STATE_EXPANDED:
+          case this.HEADER_STATE_INTERPOLATED:
+            this.scroll(this._headerMargin, smooth);
+          break;
+        }
+      }
+    },
+
+    /**
+     * Scroll to the top of the content.
+     *
+     * @method scrollToTop
+     * @param {boolean} smooth true if the scroll position should be smoothly adjusted.
+     */
+    scrollToTop: function(smooth) {
+      this.scroll(0, smooth);
+    },
+
+    _headerHeightChanged: function(headerHeight) {
+      if (this._defaultCondsensedHeaderHeight !== null) {
+        this._defaultCondsensedHeaderHeight = Math.round(headerHeight * 1/3);
+        this.condensedHeaderHeight = this._defaultCondsensedHeaderHeight;
+      }
+    },
+
+    _condensedHeaderHeightChanged: function(condensedHeaderHeight) {
+      if (condensedHeaderHeight) {
+        // a user custom value
+        if (this._defaultCondsensedHeaderHeight != condensedHeaderHeight) {
+          // disable the default value
+          this._defaultCondsensedHeaderHeight = null;
+        }
       }
     },
 
     _condensesChanged: function() {
-      if (this.condenses) {
-        this._scroll();
-      } else {
-        // reset transform/opacity set on the header
-        this._condenseHeader(null);
-      }
+      this._updateScrollState(this.scroller.scrollTop);
+      this._condenseHeader(null);
     },
 
     _setup: function() {
       var s = this.scroller.style;
-      s.paddingTop = this.fixed ? '' : this.headerHeight + 'px';
 
+      s.paddingTop = this.fixed ? '' : this.headerHeight + 'px';
       s.top = this.fixed ? this.headerHeight + 'px' : '';
 
       if (this.fixed) {
+        this._setHeaderState(this.HEADER_STATE_EXPANDED);
         this._transformHeader(null);
       } else {
-        this._scroll();
+        switch (this.headerState) {
+          case this.HEADER_STATE_HIDDEN:
+            this._transformHeader(this._headerMaxDelta);
+            break;
+          case this.HEADER_STATE_CONDENSED:
+            this._transformHeader(this._headerMargin);
+            break;
+        }
       }
     },
 
     _transformHeader: function(y) {
-      var s = this.$.headerContainer.style;
-      this._translateY(s, -y);
+      this._translateY(this.$.headerContainer, -y);
 
       if (this.condenses) {
         this._condenseHeader(y);
       }
 
-      this.fire('paper-header-transform', {y: y, height: this.headerHeight,
-          condensedHeight: this.condensedHeaderHeight});
+      this.fire('paper-header-transform',
+        { y: y,
+          height: this.headerHeight,
+          condensedHeight: this.condensedHeaderHeight
+        }
+      );
     },
 
     _condenseHeader: function(y) {
       var reset = (y === null);
 
       // adjust top bar in paper-header so the top bar stays at the top
-      if (!this.scrollAwayTopbar && this.header.$ && this.header.$.topBar) {
-        this._translateY(this.header.$.topBar.style,
+      if (!this.scrollAwayTopbar && this.header && this.header.$ && this.header.$.topBar) {
+        this._translateY(this.header.$.topBar,
             reset ? null : Math.min(y, this._headerMargin));
       }
       // transition header bg
-      var hbg = this.$.headerBg.style;
       if (!this.noDissolve) {
-        hbg.opacity = reset ? '' : (this._headerMargin - y) / this._headerMargin;
+        this.$.headerBg.style.opacity = reset ? '' :
+            ( (this._headerMargin - y) / this._headerMargin);
       }
       // adjust header bg so it stays at the center
-      this._translateY(hbg, reset ? null : y / 2);
+      this._translateY(this.$.headerBg, reset ? null : y / 2);
       // transition condensed header bg
       if (!this.noDissolve) {
-        var chbg = this.$.condensedHeaderBg.style;
-        chbg = this.$.condensedHeaderBg.style;
-        chbg.opacity = reset ? '' : y / this._headerMargin;
+        this.$.condensedHeaderBg.style.opacity = reset ? '' :
+            (y / this._headerMargin);
 
         // adjust condensed header bg so it stays at the center
-        this._translateY(chbg, reset ? null : y / 2);
+        this._translateY(this.$.condensedHeaderBg, reset ? null : y / 2);
       }
     },
 
-    _translateY: function(s, y) {
-      var t = (y === null) ? '' : 'translate3d(0, ' + y + 'px, 0)';
-      setTransform(s, t);
+    _translateY: function(node, y) {
+      this.transform((y === null) ? '' : 'translate3d(0, ' + y + 'px, 0)', node);
     },
 
     /** @param {Event=} event */
     _scroll: function(event) {
-      if (!this.header) {
-        return;
+      if (this.header) {
+        this._updateScrollState(this.scroller.scrollTop);
+
+        this.fire('content-scroll', {
+          target: this.scroller
+        },
+        {
+          cancelable: false
+        });
       }
+    },
 
-      var sTop = this.scroller.scrollTop;
+    _updateScrollState: function(scrollTop) {
+      var deltaScrollTop = scrollTop - this._prevScrollTop;
+      var y = Math.max(0, (this.noReveal) ? scrollTop : this._y + deltaScrollTop);
 
-      this._y = this._y || 0;
-      this._prevScrollTop = this._prevScrollTop || 0;
+      if (y > this._headerMaxDelta) {
+        y = this._headerMaxDelta;
+        this._setHeaderState(this.HEADER_STATE_HIDDEN);
 
-      var y = Math.min(this.keepCondensedHeader ?
-          this._headerMargin : this.headerHeight, Math.max(0,
-          (this.noReveal ? sTop : this._y + sTop - this._prevScrollTop)));
-
-      if (this.condenses && this._prevScrollTop >= sTop && sTop > this._headerMargin) {
+      } else if (this.condenses && this._prevScrollTop >= scrollTop && scrollTop >= this._headerMargin) {
         y = Math.max(y, this._headerMargin);
+        this._setHeaderState(this.HEADER_STATE_CONDENSED);
+
+      } else if (y === 0) {
+        this._setHeaderState(this.HEADER_STATE_EXPANDED);
+
+      } else {
+        this._setHeaderState(this.HEADER_STATE_INTERPOLATED);
       }
 
-      if (!event || !this.fixed && y !== this._y) {
+      if (!this.fixed && y !== this._y) {
         this._transformHeader(y);
       }
 
-      this._prevScrollTop = Math.max(sTop, 0);
+      this._prevScrollTop = Math.max(scrollTop, 0);
       this._y = y;
-
-      if (event) {
-        this.fire('content-scroll', {target: this.scroller}, {cancelable: false});
-      }
     }
-
   });
-
-  //determine proper transform mechanizm
-  if (document.documentElement.style.transform !== undefined) {
-    var setTransform = function(style, string) {
-      style.transform = string;
-    }
-  } else {
-    var setTransform = function(style, string) {
-      style.webkitTransform = string;
-    }
-  }
 
 })();
 

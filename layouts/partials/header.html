@@ -15,9 +15,97 @@
   <link rel="import" href="{{$baseurl}}/bower_components/paper-fab/paper-fab.html">
   <link rel="import" href="{{$baseurl}}/bower_components/paper-item/paper-item.html">
   <link rel="import" href="{{$baseurl}}/bower_components/paper-menu/paper-menu.html">
+  <link rel="import" href="{{$baseurl}}/bower_components/paper-button/paper-button.html">
+  <link rel="import" href="{{$baseurl}}/bower_components/paper-card/paper-card.html">
   <link rel="import" href="{{$baseurl}}/bower_components/iron-image/iron-image.html">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/styles/default.min.css">
+  <link rel="stylesheet" href="{{$baseurl}}css/highlightjs-theme-github.css">
   <style is="custom-style">
+    paper-item /deep/ .content {
+		width: 100%;
+	}
+    /deep/ ::-webkit-scrollbar-track {
+      background:transparent;
+    }
+
+    /deep/ ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    /deep/ ::-webkit-scrollbar-thumb {
+      background-color: var(--paper-light-blue-500);
+    }
+  
+  paper-card .summary {
+	clear:both;
+  }
+  .title .main {
+	float:left;
+	font-size: 20px;
+	margin-bottom:10px;
+	margin-right: 15px;
+  }
+  .title paper-button {
+	min-width: 0px;
+   }
+   paper-button.green {
+      color: var(--paper-green-500);
+      --paper-button-flat-focus-color: var(--paper-green-50);
+    }
+    paper-button.green:hover {
+      background: var(--paper-green-50);
+    }
+   .article .categories {
+	float:right;
+	margin-right: 10px;
+   }
+   .categories iron-icon, .tags iron-icon{
+	--iron-icon-height: 16px;
+    --iron-icon-width: 16px;
+  }
+  .categories,.tags {
+  
+	font-size:14px;
+  }
+  .title paper-button /deep/ paper-material{
+	padding: 0px;
+	font-size:14px;
+  }
+  paper-button.blue {
+      color: var(--paper-light-blue-500);
+      --paper-button-flat-focus-color: var(--paper-light-blue-50);
+    }
+	
+    paper-button.blue:hover {
+      background: var(--paper-light-blue-50);
+    }
+  a {
+	  color: inherit;
+	  text-decoration: none;
+	}
+	.article a {
+	  color: var(--paper-light-blue-500);
+	  text-decoration: underline;
+	}
+	.main.single {
+	  width:100%;
+	  font-size:30px;
+	  line-height:45px;
+	  margin: 30px 10px;
+	}
+   #articles {
+      @apply(--layout-vertical);
+      @apply(--center-justified);
+      margin-left: auto;
+      margin-right: auto;
+	  margin-top: 20px;
+    }
+	.tags /deep/ paper-material {
+		padding: 0px;
+	}
+	 paper-card {
+      width: 100%;
+      margin-bottom: 16px;
+    }
     body {
       font-family: 'Roboto', sans-serif;
     }
@@ -81,11 +169,13 @@
       border-radius: 5px;
       background-color: #fff;
     }
-    .title{
-      font-size: 22px;
+	.toolbar-tools.paper-toolbar .title.bottom {
+		font-size: {{if isset .Site.Params "mainTitle"}}{{.Site.Params.mainTitle}}{{else}}20{{end}}px;
+	}
+    .title.bottom.title{
       padding: 8px 0 16px;
     }
-    .description{
+    .article-body{
       font-size: 16px;
       padding-bottom: 8px;
     }
@@ -104,8 +194,11 @@
       text-decoration: none;
       color: #212121;
     }
-  </style>
-
+	.toolbar-tools.paper-toolbar .title {
+		pointer-events: initial;
+	}
+	  </style>
+	<link rel="stylesheet" href="{{$baseurl}}css/markdown.css">
 </head>
 <body>
   <paper-drawer-panel id="drawerPanel" responsive-width="1280px">
@@ -124,15 +217,15 @@
       </iron-image>
       <paper-menu>
         <a href="{{$baseurl}}"><paper-item>
-          <iron-icon icon="home"></iron-icon>　<div class="flex">Home</div>
+          <iron-icon icon="home"></iron-icon>　<div class="flex">{{.Site.Params.transHome}}</div>
           <iron-icon icon="chevron-right"></iron-icon>
         </paper-item></a>
         <a href="{{$baseurl}}/categories/"><paper-item>
-          <iron-icon icon="drafts"></iron-icon>　<div class="flex">Categories</div>
+          <iron-icon icon="drafts"></iron-icon>　<div class="flex">{{.Site.Params.transCategory}}</div>
           <iron-icon icon="chevron-right"></iron-icon>
         </paper-item></a>
         <a href="{{$baseurl}}/tags/"><paper-item>
-          <iron-icon icon="loyalty"></iron-icon>　<div class="flex">Tags</div>
+          <iron-icon icon="loyalty"></iron-icon>　<div class="flex">{{.Site.Params.transTag}}</div>
           <iron-icon icon="chevron-right"></iron-icon>
         </paper-item></a>
       </paper-menu>
@@ -143,7 +236,8 @@
       <paper-toolbar>
 
         <paper-icon-button icon="menu" paper-drawer-toggle></paper-icon-button>
-        <div class="bottom title">{{.Site.Title}}</div>
+		<div class="bottom title"><a href="{{$baseurl}}">{{.Site.Title}}</a></div>
+        
         <div class="flex"></div>
 		{{ range $item := .Site.Params.logos }}
 			{{ if eq $item.site "weibo" }}
