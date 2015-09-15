@@ -49,11 +49,25 @@ copyright = "© 2015 Copyright Text"
   photo = "images/photo.png" # optional
   profile = "images/profile.png" # optional
   cover = "images/cover.png" # optional
-  twitter = "Your Twitter Name" # optional
-  github = "Your Github Name" # optional
-  facebook = "Your facebook Name" # optional
-  gplus = "Your Google+ Name" # optional
-  linkedin = "Your linkedin Name" # optional
+  [[params.logos]]
+    site = "weibo" # optional
+	username = "Your Weibo name"
+  [[params.logos]]
+    site = "twitter" # optional
+	username = "Your Twitter name"
+  [[params.logos]]
+    site = "facebook" # optional
+	username = "Your facebook name"
+  [[params.logos]]
+    site = "github" # optional
+	username = "Your Github name"
+  [[params.logos]]
+    site = "gplus" # optional
+	username = "Your Google+ name"
+  [[params.logos]]
+    site = "linkedin" # optional
+	username = "Your linkedin name"
+	
   googleAnalyticsUserID = "Your Analytics User Id" # optional
 
 [permalinks]

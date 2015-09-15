@@ -6,6 +6,7 @@
   <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
   <meta name="viewport" content="width=device-width, minimum-scale=1.0, initial-scale=1, user-scalable=yes">
   <title>{{ .Title }}</title>
+  <link rel="icon" type="image/x-icon" href="{{$baseurl}}/favicon.ico">
   <script src="{{$baseurl}}/bower_components/webcomponentsjs/webcomponents-lite.js"></script>
   <link rel="import" href="{{$baseurl}}/bower_components/iron-icons/iron-icons.html">
   <link rel="import" href="{{$baseurl}}/bower_components/paper-drawer-panel/paper-drawer-panel.html">
@@ -15,9 +16,97 @@
   <link rel="import" href="{{$baseurl}}/bower_components/paper-fab/paper-fab.html">
   <link rel="import" href="{{$baseurl}}/bower_components/paper-item/paper-item.html">
   <link rel="import" href="{{$baseurl}}/bower_components/paper-menu/paper-menu.html">
+  <link rel="import" href="{{$baseurl}}/bower_components/paper-button/paper-button.html">
+  <link rel="import" href="{{$baseurl}}/bower_components/paper-card/paper-card.html">
   <link rel="import" href="{{$baseurl}}/bower_components/iron-image/iron-image.html">
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/8.6/styles/default.min.css">
+  <link rel="stylesheet" href="{{$baseurl}}/css/highlightjs-theme-github.css">
   <style is="custom-style">
+    paper-item /deep/ .content {
+		width: 100%;
+	}
+    /deep/ ::-webkit-scrollbar-track {
+      background:transparent;
+    }
+
+    /deep/ ::-webkit-scrollbar {
+      width: 5px;
+    }
+
+    /deep/ ::-webkit-scrollbar-thumb {
+      background-color: var(--paper-light-blue-500);
+    }
+  
+  paper-card .summary {
+	clear:both;
+  }
+  .title .main {
+	float:left;
+	font-size: 20px;
+	margin-bottom:10px;
+	margin-right: 15px;
+  }
+  .title paper-button {
+	min-width: 0px;
+   }
+   paper-button.green {
+      color: var(--paper-green-500);
+      --paper-button-flat-focus-color: var(--paper-green-50);
+    }
+    paper-button.green:hover {
+      background: var(--paper-green-50);
+    }
+   .article .categories {
+	float:right;
+	margin-right: 10px;
+   }
+   .categories iron-icon, .tags iron-icon{
+	--iron-icon-height: 16px;
+    --iron-icon-width: 16px;
+  }
+  .categories,.tags {
+  
+	font-size:14px;
+  }
+  .title paper-button /deep/ paper-material{
+	padding: 0px;
+	font-size:14px;
+  }
+  paper-button.blue {
+      color: var(--paper-light-blue-500);
+      --paper-button-flat-focus-color: var(--paper-light-blue-50);
+    }
+	
+    paper-button.blue:hover {
+      background: var(--paper-light-blue-50);
+    }
+  a {
+	  color: inherit;
+	  text-decoration: none;
+	}
+	.article a {
+	  color: var(--paper-light-blue-500);
+	  text-decoration: underline;
+	}
+	.main.single {
+	  width:100%;
+	  font-size:30px;
+	  line-height:45px;
+	  margin: 30px 10px;
+	}
+   #articles {
+      @apply(--layout-vertical);
+      @apply(--center-justified);
+      margin-left: auto;
+      margin-right: auto;
+	  margin-top: 20px;
+    }
+	.tags /deep/ paper-material {
+		padding: 0px;
+	}
+	 paper-card {
+      width: 100%;
+      margin-bottom: 16px;
+    }
     body {
       font-family: 'Roboto', sans-serif;
     }
@@ -81,11 +170,13 @@
       border-radius: 5px;
       background-color: #fff;
     }
-    .title{
-      font-size: 22px;
+	.toolbar-tools.paper-toolbar .title.bottom {
+		font-size: {{if isset .Site.Params "mainTitle"}}{{.Site.Params.mainTitle}}{{else}}20{{end}}px;
+	}
+    .title.bottom.title{
       padding: 8px 0 16px;
     }
-    .description{
+    .article-body{
       font-size: 16px;
       padding-bottom: 8px;
     }
@@ -104,8 +195,11 @@
       text-decoration: none;
       color: #212121;
     }
-  </style>
-
+	.toolbar-tools.paper-toolbar .title {
+		pointer-events: initial;
+	}
+	  </style>
+	<link rel="stylesheet" href="{{$baseurl}}/css/markdown.css">
 </head>
 <body>
   <paper-drawer-panel id="drawerPanel" responsive-width="1280px">
@@ -123,43 +217,44 @@
           <div class="author">{{.Site.Params.author}}</div>
       </iron-image>
       <paper-menu>
-        <a href="{{$baseurl}}"><paper-item>
-          <iron-icon icon="home"></iron-icon>　<div class="flex">Home</div>
+        <a href="{{$baseurl}}/index.html"><paper-item>
+          <iron-icon icon="home"></iron-icon>　<div class="flex">{{.Site.Params.transHome}}</div>
           <iron-icon icon="chevron-right"></iron-icon>
         </paper-item></a>
         <a href="{{$baseurl}}/categories/"><paper-item>
-          <iron-icon icon="drafts"></iron-icon>　<div class="flex">Categories</div>
+          <iron-icon icon="drafts"></iron-icon>　<div class="flex">{{.Site.Params.transCategory}}</div>
           <iron-icon icon="chevron-right"></iron-icon>
         </paper-item></a>
         <a href="{{$baseurl}}/tags/"><paper-item>
-          <iron-icon icon="loyalty"></iron-icon>　<div class="flex">Tags</div>
+          <iron-icon icon="loyalty"></iron-icon>　<div class="flex">{{.Site.Params.transTag}}</div>
           <iron-icon icon="chevron-right"></iron-icon>
         </paper-item></a>
       </paper-menu>
     </div>
 
     <paper-scroll-header-panel main condenses header-height="256" condensed-header-height="64">
-
+	
       <paper-toolbar>
 
         <paper-icon-button icon="menu" paper-drawer-toggle></paper-icon-button>
-        <div class="bottom title">{{.Site.Title}}</div>
+		<div class="bottom title"><a href="{{$baseurl}}/index.html">{{.Site.Title}}</a></div>
+        
         <div class="flex"></div>
-        {{with .Site.Params.facebook}}
-          <a href="https://www.facebook.com/{{ . }}"><paper-icon-button src="{{$baseurl}}/images/facebook-dreamstale25.png"></paper-icon-button></a>
-        {{end}}
-        {{with .Site.Params.twitter}}
-          <a href="https://twitter.com/{{ . }}"><paper-icon-button src="{{$baseurl}}/images/twitter-dreamstale71.png"></paper-icon-button></a>
-        {{end}}
-        {{with .Site.Params.gplus}}
-          <a href="https://google.com/+{{ . }}"><paper-icon-button src="{{$baseurl}}/images/google+-dreamstale37.png"></paper-icon-button></a>
-        {{end}}
-        {{with .Site.Params.linkedin}}
-          <a href="https://www.linkedin.com/in/{{ . }}"><paper-icon-button src="{{$baseurl}}/images/linkedin-dreamstale45.png"></paper-icon-button></a>
-        {{end}}
-        {{with .Site.Params.github}}
-          <a href="https://github.com/{{ . }}"><paper-icon-button src="{{$baseurl}}/images/github2-dreamstale35.png"></paper-icon-button></a>
-        {{end}}
-          <a href="{{$baseurl}}/index.xml"><paper-icon-button src="{{$baseurl}}/images/feed-dreamstale27.png"></paper-icon-button></a>
+		{{ range $item := .Site.Params.logos }}
+			{{ if eq $item.site "weibo" }}
+				<a href="http://www.weibo.com/{{ $item.username }}"><paper-icon-button src="{{$baseurl}}/images/weibo.png"></paper-icon-button></a>
+			{{ else if eq $item.site "github"}}
+				<a href="https://github.com/{{ $item.username }}"><paper-icon-button src="{{$baseurl}}/images/github.png"></paper-icon-button></a>
+			{{ else if eq $item.site "twitter"}}
+				<a href="https://twitter.com/{{ $item.username }}"><paper-icon-button src="{{$baseurl}}/images/twitter.png"></paper-icon-button></a>
+			{{ else if eq $item.site "facebook"}}
+				<a href="https://www.facebook.com/{{ $item.username }}"><paper-icon-button src="{{$baseurl}}/images/facebook.png"></paper-icon-button></a>
+			{{ else if eq $item.site "gplus"}}
+				<a href="https://google.com/+{{ $item.username }}"><paper-icon-button src="{{$baseurl}}/images/gplus.png"></paper-icon-button></a>
+			{{ else if eq $item.site "linkedin"}}
+				<a href="https://www.linkedin.com/in/{{ $item.username }}"><paper-icon-button src="{{$baseurl}}/images/linkedin.png"></paper-icon-button></a>
+			{{end}}
+		{{end}}
+		<a href="{{$baseurl}}/index.xml"><paper-icon-button src="{{$baseurl}}/images/feed.png"></paper-icon-button></a>
       
       </paper-toolbar>

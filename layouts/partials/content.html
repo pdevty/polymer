@@ -1,8 +1,23 @@
 {{ $baseurl := .Site.BaseURL }}
-<div class="content">
+<paper-item>
+<div class="content" id="articles">
 
 {{range $index, $page := .Paginator.Pages}}
-  <div class="article">
+  
+  <paper-card>
+		
+	  <div class="card-content">
+		  <div class="title">
+			<a href="{{ .Permalink }}" ><div class="main">{{ .Title }}</div></a>
+			{{partial "category.html" .}}
+		  </div>
+	  </div>
+	  
+	  <div class="card-actions">
+		{{partial "tag.html" .}}
+	  </div>
+  </paper-card>
+ <!--  <div class="article">
     <div class="title"><a href="{{ .Permalink }}">{{ .Title }}</a></div>
     {{if .Params.categories }}
       <div class="categories">
@@ -20,7 +35,8 @@
         {{ end }}
       {{end}} 
     </div>
-  </div>
+  </div> -->
 {{ end }}
 
 </div>
+</paper-item>
